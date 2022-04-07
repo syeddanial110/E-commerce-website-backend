@@ -1,0 +1,18 @@
+const { Schema, model } = require("mongoose");
+
+const productSchema = new Schema(
+  {
+    title: String,
+    productName: String,
+    comapnyName: String,
+    price: String,
+    description: String,
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const product= new model("product", productSchema)
+
+module.exports= product;
