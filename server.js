@@ -1,5 +1,6 @@
 require("dotenv").config();
 const productRoute = require("./routes/productRoute");
+const ReviewsRoute = require("./routes/ReviewsRoute");
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/products", productRoute);
+app.use("/api/reviews", ReviewsRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is successfully running at http://localhost:${PORT}`);
