@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 5000;
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
@@ -21,6 +22,8 @@ app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Hello World");
+
+
 });
 
 app.use("/api/products", productRoute);

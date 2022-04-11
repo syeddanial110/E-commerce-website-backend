@@ -7,6 +7,10 @@ const productSchema = new Schema(
     comapnyName: String,
     price: String,
     description: String,
+    image:{
+      data: Buffer,
+      contentType:String
+    }
   },
   {
     timestamps: true,
