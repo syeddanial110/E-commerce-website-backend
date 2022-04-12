@@ -4,44 +4,59 @@ const product = require("../models/ProductModel");
 const multer = require("multer");
 
 // Disk storage
+
+// const Storage = multer.diskStorage({
+//   destination: "uploads",
+//   filename: (req, file, cb) => {
+//     cb(null, file.originalname);
+//   },
+// });
+
 const Storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
+  destination: function (req, file, callback) {
+    callback(null, "uploads");
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.fieldname + " - " + file.filename);
   },
 });
 
-const upload = multer({
+exports.upload = multer({
   storage: Storage,
-}).any();
+});
 
 exports.createProduct = async (req, res) => {
   try {
-    // const data = await product.create(req.body);
-    const dataWithImage = new product({
-      title: req.body.title,
-      productName: req.body.productName,
-      comapnyName: req.body.comapnyName,
-      price: req.body.price,
-      image: {
-        data: req.file.filename,
-        contentType: "image/png",
-      },
-    });
-    dataWithImage
-      .save()
-      .then(() => {
-        res.status(200).json({ status: "success", data: { dataWithImage } });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    // console.log(data);
-    res.setHeader("content-type", "application/json");
-    // res.status(201).json({
-    //   status: "succes",
-    //   data: { data },
+    // const dataWithImage = new product({
+    //   title: req.body.title,
+    //   productName: req.body.productName,
+    //   comapnyName: req.body.comapnyName,
+    //   price: req.body.price,
+    //   // image: {
+    //   //   data: req.file.filename,
+    //   //   contentType: "image/png",
+    //   // },
+    //   image:req.file
     // });
+
+    // console.log(dataWithImage);
+    //   console.log(req.file);
+    //  await dataWithImage
+    //     .save()
+    //     .then(() => {
+    //       res.status(200).json({ status: "success", data: { dataWithImage } });
+    //     })
+    //     .catch((error) => {
+    //       console.log(error);
+    //     });
+
+    const data = await product.create(req.body);
+    console.log(data);
+    res.setHeader("content-type", "application/json");
+    res.status(201).json({
+      status: "succes",
+      data: { data },
+    });
   } catch (error) {
     res.status(404).json({
       status: "error",
@@ -55,31 +70,8 @@ exports.getAllProducts = async (req, res) => {
   try {
     const data = await product.find().sort({ price: "asc" });
     const filters = req.query;
-    // const filteredUsers = data.filter((user) => {
-    //   let isValid = true;
-    //   for (key in filters) {
-    //     console.log(key, user[key], filters[key]);
-    //     isValid = isValid && user[key] == filters[key];
-    //  }
-    //   return isValid;
-    // });
-    // console.log("filteredUsers",filteredUsers);
 
-    // const data = await product.find().limit(1);
-    // const page = product.paginate(
-    //   2,
-    //   4,
-    //   function (error, pageCount, paginatedResults) {
-    //     if (error) {
-    //       console.error(error);
-    //     } else {
-    //       console.log("Pages:", pageCount);
-    //       console.log(paginatedResults);
-    //     }
-    //   }
-    // );
-
-    console.log("req.query", req.query);
+    // console.log("req.query", req.query);
 
     res.setHeader("content-type", "application/json");
     res.status(200).json({
