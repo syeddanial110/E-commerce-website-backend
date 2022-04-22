@@ -1,6 +1,7 @@
 require("dotenv").config();
 const productRoute = require("./routes/productRoute");
 const ReviewsRoute = require("./routes/ReviewsRoute");
+const authRoute = require("./routes/authRoute");
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,7 +20,8 @@ mongoose
 
 app.use(express.json());
 app.use(cors());
-// app.use(bodyParser.urlencoded({extended:true}))
+app.use(bodyParser.json()); 
+app.use(bodyParser.urlencoded({extended:true}))
 
 app.get("/", (req, res) => {
 //  res.sendFile(__dirname+ '/index.html')
@@ -29,6 +31,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/products", productRoute);
 app.use("/api/reviews", ReviewsRoute);
+app.use("/api/auth", authRoute )
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is successfully running at http://localhost:${PORT}`);
