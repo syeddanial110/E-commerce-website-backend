@@ -7,10 +7,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const mongoose = require("mongoose");
 const cors = require("cors");
-const bodyParser= require("body-parser")
+const bodyParser = require("body-parser");
+const mongoosePaginate = require('mongoose-paginate');
 
 mongoose
-  .connect(process.env.MONGODB_URL)
+  .connect("mongodb+srv://syeddanial:admin@cluster0.3ozl6pf.mongodb.net/")
   .then(() => {
     console.log("Successfully connected with mongoose");
   })
@@ -18,22 +19,20 @@ mongoose
     console.log("Mongoose connection error", error);
   });
 
-app.use(express.json());  
-app.use(cors());  
-app.use(bodyParser.json()); 
-app.use(bodyParser.urlencoded({extended:true}))
+app.use(express.json());
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-//  res.sendFile(__dirname+ '/index.html')
+  //  res.sendFile(__dirname+ '/index.html')
 
-  res.send("Hello World")
+  res.send("Hello World");
 });
 
 app.use("/api/products", productRoute);
 app.use("/api/reviews", ReviewsRoute);
-app.use("/api/auth", authRoute )
-
-
+app.use("/api/auth", authRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is successfully running at http://localhost:${PORT}`);

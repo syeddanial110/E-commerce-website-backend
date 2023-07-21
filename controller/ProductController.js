@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const product = require("../models/ProductModel");
 const multer = require("multer");
+const { RestData } = require("../models/data");
 
 // Disk storage
 
@@ -51,7 +52,7 @@ exports.createProduct = async (req, res) => {
     //     });
 
     const data = await product.create(req.body);
-    console.log(data);
+    // console.log(data);
     res.setHeader("content-type", "application/json");
     res.status(201).json({
       status: "succes",
@@ -68,10 +69,53 @@ exports.createProduct = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
+    const pageNumber = req.query.page || 1;
+
+    // console.log("pageNumber", typeof pageNumber);
+    const pageSize = 2;
+
     const data = await product.find().sort({ price: "asc" });
     const filters = req.query;
 
+    product.paginate(
+      {},
+      { page: pageNumber, limit: pageSize },
+      (err, result) => {
+        const { docs, total, limit, page, pages } = result;
+        res.json({ users: docs, total, limit, page, pages });
+      }
+    );
+
     // console.log("req.query", req.query);
+
+    // const x= RestData.pag
+
+    res.setHeader("content-type", "application/json");
+    // res.status(200).json({
+    //   status: "success",
+    //   count: RestData.length,
+    //   // pages:   parseInt(req.query.page, 10),
+    //   // pages: page,
+    //   data: { data },
+    //   // data: RestData,
+    // });
+  } catch (error) {
+    res.status(404).json({
+      status: "error",
+      data: { msg: "error to fetch data" },
+    });
+    console.log(error.message);
+  }
+};
+
+exports.searchProduct = async (req, res) => {
+  try {
+    const filters = req.query;
+    const data = await product.find();
+    const x = await product.find({
+      title: { $regex: new RegExp(filters.filter, "i") },
+    });
+    console.log("filters", x);
 
     res.setHeader("content-type", "application/json");
     res.status(200).json({
@@ -80,6 +124,7 @@ exports.getAllProducts = async (req, res) => {
       // pages:   parseInt(req.query.page, 10),
       // pages: page,
       data: { data },
+      // data: RestData,
     });
   } catch (error) {
     res.status(404).json({

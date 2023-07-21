@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate");
 
 const productSchema = new Schema(
   {
@@ -11,13 +12,15 @@ const productSchema = new Schema(
     //   data: Buffer,
     //   contentType:String
     // }
-    image: String
+    image: String,
   },
   {
     timestamps: true,
   }
 );
 
-const product= new model("product", productSchema)
+productSchema.plugin(mongoosePaginate);
 
-module.exports= product;
+const product = new model("product", productSchema);
+
+module.exports = product;
