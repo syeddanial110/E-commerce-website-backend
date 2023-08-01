@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5000;
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const mongoosePaginate = require('mongoose-paginate');
+const mongoosePaginate = require("mongoose-paginate");
 
 mongoose
   .connect("mongodb+srv://syeddanial:admin@cluster0.3ozl6pf.mongodb.net/")
