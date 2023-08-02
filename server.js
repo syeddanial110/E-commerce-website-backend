@@ -9,6 +9,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoosePaginate = require("mongoose-paginate");
+const { verifyToken } = require("./controller/authController");
+const sendEmail = require("./controller/sendEmail");
 
 mongoose
   .connect("mongodb+srv://syeddanial:admin@cluster0.3ozl6pf.mongodb.net/")
@@ -30,9 +32,11 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.use("/api/products", productRoute);
+app.use("/api/products", verifyToken, productRoute);
 app.use("/api/reviews", ReviewsRoute);
 app.use("/api/auth", authRoute);
+
+app.get("/send-email", sendEmail);
 
 app.listen(PORT, () => {
   console.log(`Server is successfully running at http://localhost:${PORT}`);

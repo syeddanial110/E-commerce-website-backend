@@ -83,7 +83,6 @@ exports.login = async (req, res) => {
     }
 
     const filteredUser = users.find((item) => item.email == email);
-    console.log("filteredUser", filteredUser);
 
     if (!filteredUser) {
       return res.json({ message: "User not found" });
