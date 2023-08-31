@@ -10,7 +10,7 @@ const cors = require("cors");
 const bodyParser= require("body-parser")
 
 mongoose
-  .connect(process.env.MONGODB_URL)
+  .connect('mongodb+srv://admin:admin@cluster0.yaevj.mongodb.net/?retryWrites=true&w=majority')
   .then(() => {
     console.log("Successfully connected with mongoose");
   })
@@ -30,8 +30,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/products", productRoute);
-app.use("/api/reviews", ReviewsRoute);
-app.use("/api/auth", authRoute )
 
 
 
