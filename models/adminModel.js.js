@@ -1,8 +1,9 @@
+const { hash } = require("bcrypt");
 const { Schema, model } = require("mongoose");
 
 const adminSchema = new Schema(
   {
-    userName: {
+    name: {
       type: String,
       required: true,
     },
@@ -16,20 +17,9 @@ const adminSchema = new Schema(
       required: true,
       lower: true,
     },
-    displayPicture: {
+    password: {
       type: String,
-      default: "default.png",
-    },
-    userId: {
-      type: Schema.ObjectId,
-      required: [true, "user id is required!"],
-    },
-    address: {
-      country: String,
-      city: String,
-      street: String,
-      state: String,
-      zip: String,
+      required: true,
     },
   },
   {
@@ -37,7 +27,6 @@ const adminSchema = new Schema(
   }
 );
 
+const Admin = new model("admin", adminSchema);
 
-const Admin= new model("admin", adminSchema)
-
-module.exports = Admin
+module.exports = Admin;

@@ -2,6 +2,7 @@ var jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const { addAdmin, fetchAdmin } = require("../controller/adminController");
 const { addBuyer } = require("../controller/buyerController");
+const bcrypt = require("bcrypt");
 
 const signJWT = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_WEB_SECRET, {
@@ -11,7 +12,7 @@ const signJWT = (userId) => {
 
 const createAndSendToken = (user, res) => {
   var token = signJWT(user.userId);
-    console.log(user,"user");
+  console.log(user, "user");
   res.cookie("jwt", token, {
     expires: new Date(
       Date.now() + parseInt(process.env.COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
@@ -29,33 +30,51 @@ const createAndSendToken = (user, res) => {
 
 exports.signup = async (req, res) => {
   try {
-    var user = await User.create(req.body);
-
-    let profile = {
-      userName: user.userName,
-      email: user.email,
-      userId: user._id,
-    };
-
-    let userProfile = null;
-
-    if (user.role === "admin") {
-      userProfile = await addAdmin(profile);
-    }
-    if (user.role === "buyer") {
-      userProfile = await addBuyer(profile);
+    const { email, password } = req.body;
+    if (!(email && password)) {
+      res.status(400).send("All input is required");
     }
 
-    createAndSendToken(userProfile, res);
+    // Validate if user exist in our database
+    const oldUser = await User.findOne({ email });
+
+    if (oldUser) {
+      return res.status(409).send("User Already Exist. Please Login");
+    }
+
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      email: email.toLowerCase(),
+      password: hashPassword,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: { user },
+    });
+
+    // Create user in our database
   } catch (error) {
     console.log("error.message : ", error.message);
     res.status(404).json({ status: "error", error: error.message });
   }
 };
 
+function validateUser(hash, password) {
+  return bcrypt.compare(password, hash);
+}
+
 exports.login = async (req, res) => {
+  const secretKey = "secretkey";
   try {
     var { email, password } = req.body;
+
+    var users = await User.find();
+    console.log("users", users);
+
     // check if user & email exits
     if (!email || !password) {
       return res
@@ -63,32 +82,62 @@ exports.login = async (req, res) => {
         .json({ status: "error", error: "please enter email & password" });
     }
 
-    // fetch user whose email is given
+    const filteredUser = users.find((item) => item.email == email);
 
-    // var user = await User.findOne({ email });
-    // yahan pa hum na .select('+password') is lia use kia hai kun ka hum password ki field chah rahe hain response ma jo ka DB ma save hai for password verification purpose but hum na User model ka ander password field ma aak check lagaya howa hai
-    // select false ka to usko override karna ka lia hum na asa kia
-
-    var user = await User.findOne({ email }).select("+password");
-    console.log(user,"user");
-    // verify password
-    // var passwordVerified = await bcrypt.compare(password, user.password);
-    if (!(await user.passwordVerification(password, user.password)) || !user) {
-      return res
-        .status(401)
-        .json({ status: "error", error: "invalid email or password" });
+    if (!filteredUser) {
+      return res.json({ message: "User not found" });
     }
 
-    var userProfile = null;
+    try {
+      const isUserPasswordMatched = await validateUser(
+        filteredUser.password,
+        password
+      );
 
-    if (user.role === "admin") userProfile = await fetchAdmin(user._id);
-    if (user.role === "buyer") userProfile = await fetchBuyer(user._id);
-
-    // createAndSendToken(user, res);
-    createAndSendToken(userProfile, res);
+      if (isUserPasswordMatched) {
+        const user = {
+          email,
+          password,
+        };
+        jwt.sign({ user }, secretKey, { expiresIn: "30000s" }, (err, token) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ status: "error", error: "Error signing token" });
+          }
+          res.json({
+            token,
+            message: "token",
+          });
+        });
+      } else {
+        res.json({
+          message: "Password does not match",
+        });
+      }
+    } catch (error) {
+      console.log("error.message : ", error.message);
+      res
+        .status(500)
+        .json({ status: "error", error: "Error during password validation" });
+    }
   } catch (error) {
     console.log("error.message : ", error.message);
     res.status(404).json({ status: "error", error: error.message });
+  }
+};
+
+exports.verifyToken = async (req, res, next) => {
+  const baererHeader = req.headers["authorization"];
+  if (typeof baererHeader !== "undefined") {
+    const bearer = baererHeader.split(" ");
+    const token = bearer[1];
+    req.token = token;
+    next();
+  } else {
+    res.send({
+      message: "Token is invalid",
+    });
   }
 };
 

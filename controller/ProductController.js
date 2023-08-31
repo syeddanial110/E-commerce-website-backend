@@ -2,6 +2,10 @@
 const mongoose = require("mongoose");
 const product = require("../models/ProductModel");
 const multer = require("multer");
+const { RestData } = require("../models/data");
+const { isTokenVerify } = require("../helpers");
+var jwt = require("jsonwebtoken");
+const helper = require("../helpers/index");
 
 // Disk storage
 
@@ -49,14 +53,22 @@ exports.createProduct = async (req, res) => {
     //     .catch((error) => {
     //       console.log(error);
     //     });
-
-    const data = await product.create(req.body);
-    console.log(data);
-    res.setHeader("content-type", "application/json");
-    res.status(201).json({
-      status: "succes",
-      data: { data },
-    });
+    const { title, productName, comapnyName, price, description } = req.body;
+    if (title && productName && comapnyName && price && description) {
+      const data = await product.create(req.body);
+      // console.log(data);
+      res.setHeader("content-type", "application/json");
+      res.status(201).json({
+        status: "succes",
+        data: { data },
+      });
+    } else {
+      res.setHeader("content-type", "application/json");
+      res.status(201).json({
+        status: "succes",
+        message: "Fill the corect keys",
+      });
+    }
   } catch (error) {
     res.status(404).json({
       status: "error",
@@ -68,10 +80,61 @@ exports.createProduct = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const data = await product.find().sort({ price: "asc" });
-    const filters = req.query;
+    const secretKey = "secretkey";
+    const x = helper.isTokenVerify(req, res);
+    if (x) {
+      const pageNumber = req.query.page || 1;
+      const pageSize = 2;
 
-    // console.log("req.query", req.query);
+      const data = await product.find().sort({ price: "asc" });
+      const filters = req.query;
+
+      product.paginate(
+        {},
+        { page: pageNumber, limit: pageSize },
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              status: "error",
+              data: { msg: "Error while paginating products" },
+            });
+          }
+          const { docs, total, limit, page, pages } = result;
+          res.json({
+            status: "success",
+            users: docs,
+            total,
+            limit,
+            page,
+            pages,
+            data: { data },
+            token: "token is verified",
+          });
+        }
+      );
+    } else {
+      res.json({
+        status: false,
+        token: "Invalid token",
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      status: "error",
+      data: { msg: "error to fetch data" },
+    });
+    console.log(error.message);
+  }
+};
+
+exports.searchProduct = async (req, res) => {
+  try {
+    const filters = req.query;
+    const data = await product.find();
+    const x = await product.find({
+      title: { $regex: new RegExp(filters.filter, "i") },
+    });
+    console.log("filters", x);
 
     res.setHeader("content-type", "application/json");
     res.status(200).json({
@@ -80,6 +143,7 @@ exports.getAllProducts = async (req, res) => {
       // pages:   parseInt(req.query.page, 10),
       // pages: page,
       data: { data },
+      // data: RestData,
     });
   } catch (error) {
     res.status(404).json({
